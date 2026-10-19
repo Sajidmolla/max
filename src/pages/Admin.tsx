@@ -6,7 +6,9 @@ import { Player } from '../components'
 import type { Category, Profile, Video } from '../lib/types'
 
 type Tab = 'overview' | 'videos' | 'categories' | 'members' | 'settings'
-const emptyForm = { id: '', title: '', description: '', category_id: '', thumbnail_url: '', release_year: '', duration_minutes: '', url: '', status: 'draft', featured: false, sort_order: '0' }
+const emptyForm = { id: '', title: '', description: '', category_id: '', thumbnail_url: '', release_year: '', duration_minutes: '', url: '', status: 'draft', featured: false, sort_order: '0', series_title: '', part_number: '', episode_number: '' }
+
+const Field = ({ label, children }: { label: string; children: any }) => <label className="block text-sm space-y-1"><span className="text-zinc-400">{label}</span>{children}</label>
 
 export default function Admin() {
   const [tab, setTab] = useState<Tab>('overview')
@@ -35,17 +37,20 @@ export default function Admin() {
     const id = extractDriveId(form.url)
     if (!id) return setMsg('That isn’t a Google Drive file link. Use a link like https://drive.google.com/file/d/FILE_ID/view')
     if (!form.title.trim()) return setMsg('Add a title.')
+    if (form.part_number && !form.series_title.trim()) return setMsg('Part number dile Series name o dite hobe.')
+    if (form.series_title.trim() && !form.part_number) return setMsg('Series name dile Part number o dite hobe.')
     const row = {
       title: form.title.trim(), description: form.description || null, category_id: form.category_id || null,
       thumbnail_url: form.thumbnail_url || null, release_year: form.release_year ? +form.release_year : null,
       duration_minutes: form.duration_minutes ? +form.duration_minutes : null, drive_file_id: id,
       status: status || form.status, featured: form.featured, sort_order: +form.sort_order || 0,
+      series_title: form.series_title.trim() || null, part_number: form.part_number ? +form.part_number : null, episode_number: form.episode_number ? +form.episode_number : null,
     }
     const { error } = form.id ? await supabase.from('videos').update(row).eq('id', form.id) : await supabase.from('videos').insert(row)
     note(error, row.status === 'published' ? 'Saved and published.' : 'Saved as draft.')
     if (!error) { setForm({ ...emptyForm }); setPreview(null); load() }
   }
-  const edit = (v: Video) => { setForm({ id: v.id, title: v.title, description: v.description || '', category_id: v.category_id || '', thumbnail_url: v.thumbnail_url || '', release_year: v.release_year?.toString() || '', duration_minutes: v.duration_minutes?.toString() || '', url: `https://drive.google.com/file/d/${v.drive_file_id}/view`, status: v.status, featured: v.featured, sort_order: String(v.sort_order) }); setTab('videos'); window.scrollTo(0, 0) }
+  const edit = (v: Video) => { setForm({ id: v.id, title: v.title, description: v.description || '', category_id: v.category_id || '', thumbnail_url: v.thumbnail_url || '', release_year: v.release_year?.toString() || '', duration_minutes: v.duration_minutes?.toString() || '', url: `https://drive.google.com/file/d/${v.drive_file_id}/view`, status: v.status, featured: v.featured, sort_order: String(v.sort_order), series_title: v.series_title || '', part_number: v.part_number?.toString() || '', episode_number: v.episode_number?.toString() || '' }); setTab('videos'); window.scrollTo(0, 0) }
   async function toggle(v: Video) { const { error } = await supabase.from('videos').update({ status: v.status === 'published' ? 'draft' : 'published' }).eq('id', v.id); note(error, 'Status updated.'); load() }
   async function del(v: Video) { if (!confirm(`Delete “${v.title}”? This cannot be undone.`)) return; const { error } = await supabase.from('videos').delete().eq('id', v.id); note(error, 'Deleted.'); load() }
   async function addCat() { if (!newCat.trim()) return; const { error } = await supabase.from('categories').insert({ name: newCat.trim(), sort_order: cats.length + 1 }); note(error, 'Category added.'); setNewCat(''); load() }
@@ -63,7 +68,6 @@ export default function Admin() {
 
   const published = videos.filter((v) => v.status === 'published').length
   const tabs: Tab[] = ['overview', 'videos', 'categories', 'members', 'settings']
-  const Field = ({ label, children }: { label: string; children: any }) => <label className="block text-sm space-y-1"><span className="text-zinc-400">{label}</span>{children}</label>
 
   return (
     <div className="max-w-5xl mx-auto p-4 md:p-8 pb-20">
@@ -90,6 +94,9 @@ export default function Admin() {
             <Field label="Release year"><input className="input" type="number" value={form.release_year} onChange={(e) => f('release_year', e.target.value)} /></Field>
             <Field label="Duration (minutes)"><input className="input" type="number" value={form.duration_minutes} onChange={(e) => f('duration_minutes', e.target.value)} /></Field>
             <Field label="Display order"><input className="input" type="number" value={form.sort_order} onChange={(e) => f('sort_order', e.target.value)} /></Field>
+            <Field label="Series name (shob part e ekই naam)"><input className="input" placeholder="Jemon: Days with My Stepsister" value={form.series_title} onChange={(e) => f('series_title', e.target.value)} /></Field>
+            <Field label="Part number"><input className="input" type="number" min="1" value={form.part_number} onChange={(e) => f('part_number', e.target.value)} /></Field>
+            <Field label="Episode number (part er bhitore, optional)"><input className="input" type="number" min="1" value={form.episode_number} onChange={(e) => f('episode_number', e.target.value)} /></Field>
             <label className="flex items-center gap-2 text-sm pt-6"><input type="checkbox" checked={form.featured} onChange={(e) => f('featured', e.target.checked)} /> Featured on the home page</label>
           </div>
           <Field label="Description"><textarea className="input" rows={3} value={form.description} onChange={(e) => f('description', e.target.value)} /></Field>
@@ -103,7 +110,7 @@ export default function Admin() {
         </div>
         <div className="space-y-2">{videos.length === 0 && <p className="text-zinc-500">No videos yet. Add your first one above.</p>}
           {videos.map((v) => <div key={v.id} className="flex items-center gap-3 bg-panel border border-line rounded p-3">
-            <div className="flex-1 min-w-0"><p className="truncate">{v.title}</p><p className="text-xs text-zinc-500">{v.status}{v.featured ? ' · featured' : ''}</p></div>
+            <div className="flex-1 min-w-0"><p className="truncate">{v.title}</p><p className="text-xs text-zinc-500">{v.status}{v.featured ? ' · featured' : ''}{v.series_title ? ` · ${v.series_title} Part ${v.part_number}${v.episode_number ? ` Ep ${v.episode_number}` : ''}` : ''}</p></div>
             <button className="btn btn-ghost" onClick={() => edit(v)}>Edit</button>
             <button className="btn btn-ghost" onClick={() => toggle(v)}>{v.status === 'published' ? 'Unpublish' : 'Publish'}</button>
             <button className="btn btn-ghost text-red-400" onClick={() => del(v)}>Delete</button></div>)}</div>

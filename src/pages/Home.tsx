@@ -26,12 +26,18 @@ export default function Home() {
     })
   }, [])
 
+  // Series: ekta card e shudhu Part 1 Episode 1 (shobcheye choto) dekhay; baki part gulo Watch page e thake.
+  const collapse = (list: Video[]) => {
+    const first = new Map<string, Video>()
+    list.forEach((v) => { if (v.series_title) { const c = first.get(v.series_title); if (!c || (v.part_number || 0) * 10000 + (v.episode_number || 0) < (c.part_number || 0) * 10000 + (c.episode_number || 0)) first.set(v.series_title, v) } })
+    return list.filter((v) => !v.series_title || first.get(v.series_title) === v)
+  }
   const byId = useMemo(() => new Map(videos.map((v) => [v.id, v])), [videos])
   const pick = (ids: string[]) => ids.map((i) => byId.get(i)).filter(Boolean) as Video[]
   const term = q.trim().toLowerCase()
-  const results = term ? videos.filter((v) => (v.title + ' ' + (v.description || '')).toLowerCase().includes(term)) : []
+  const results = term ? collapse(videos.filter((v) => (v.title + ' ' + (v.description || '')).toLowerCase().includes(term))) : []
   const hero = videos.find((v) => v.featured) || videos[0]
-  const recent = [...videos].sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)).slice(0, 15)
+  const recent = collapse([...videos]).sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at)).slice(0, 15)
 
   return (
     <div className="pb-16">
@@ -59,8 +65,8 @@ export default function Home() {
               <VideoRow title="Continue Watching" videos={pick(histIds)} />
               <VideoRow title="My List" videos={pick(favIds)} />
               <VideoRow title="Recently Added" videos={recent} />
-              {cats.map((c) => <VideoRow key={c.id} title={c.name} videos={videos.filter((v) => v.category_id === c.id)} />)}
-              <VideoRow title="More Videos" videos={videos.filter((v) => !v.category_id)} />
+              {cats.map((c) => <VideoRow key={c.id} title={c.name} videos={collapse(videos.filter((v) => v.category_id === c.id))} />)}
+              <VideoRow title="More Videos" videos={collapse(videos.filter((v) => !v.category_id))} />
             </>
           )}
         </>
