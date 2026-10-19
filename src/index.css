@@ -1,0 +1,8 @@
+@tailwind base; @tailwind components; @tailwind utilities;
+body { @apply bg-ink text-zinc-100 font-sans antialiased; }
+.btn { @apply inline-flex items-center justify-center rounded px-4 py-2 text-sm font-bold transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-white; }
+.btn-primary { @apply bg-max text-white hover:bg-red-700; }
+.btn-ghost { @apply bg-white/10 text-white hover:bg-white/20; }
+.input { @apply w-full rounded bg-panel border border-line px-3 py-2 text-sm outline-none focus:border-zinc-400; }
+.row-scroll { scrollbar-width: none; } .row-scroll::-webkit-scrollbar { display: none; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
