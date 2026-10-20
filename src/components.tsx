@@ -27,25 +27,27 @@ export function Header() {
 
 export const thumbOf = (v: Video) => v.thumbnail_url || driveThumb(v.drive_file_id)
 
-export function Card({ v }: { v: Video }) {
+export function Card({ v, direct }: { v: Video; direct?: boolean }) {
+  const series = !direct && !!v.series_title
   return (
-    <Link to={`/watch/${v.id}`} className="shrink-0 w-44 md:w-64 group">
-      <div className="aspect-video rounded overflow-hidden bg-panel ring-1 ring-line group-hover:ring-white transition">
+    <Link to={series ? `/series/${encodeURIComponent(v.series_title!)}` : `/watch/${v.id}`} className="shrink-0 w-44 md:w-64 group">
+      <div className="relative aspect-video rounded overflow-hidden bg-panel ring-1 ring-line group-hover:ring-white transition">
         <img src={thumbOf(v)} alt="" loading="lazy" className="w-full h-full object-cover"
           onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_THUMB }} />
+        {series && <span className="absolute top-2 left-2 rounded bg-black/70 px-2 py-0.5 text-xs">Series</span>}
       </div>
-      <p className="mt-2 text-sm truncate">{v.title}</p>
-      {v.release_year && <p className="text-xs text-zinc-500">{v.release_year}</p>}
+      <p className="mt-2 text-sm truncate">{series ? v.series_title : v.title}</p>
+      {!series && v.release_year && <p className="text-xs text-zinc-500">{v.release_year}</p>}
     </Link>
   )
 }
 
-export function VideoRow({ title, videos }: { title: string; videos: Video[] }) {
+export function VideoRow({ title, videos, direct }: { title: string; videos: Video[]; direct?: boolean }) {
   if (!videos.length) return null
   return (
     <section className="mt-8">
       <h2 className="px-4 md:px-10 mb-3 text-lg font-bold">{title}</h2>
-      <div className="row-scroll flex gap-3 overflow-x-auto px-4 md:px-10 pb-2">{videos.map((v) => <Card key={v.id} v={v} />)}</div>
+      <div className="row-scroll flex gap-3 overflow-x-auto px-4 md:px-10 pb-2">{videos.map((v) => <Card key={v.id} v={v} direct={direct} />)}</div>
     </section>
   )
 }

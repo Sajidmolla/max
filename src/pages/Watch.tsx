@@ -36,6 +36,7 @@ export default function Watch() {
     <div className="pb-16"><Header />
       <div className="px-4 md:px-10 max-w-5xl mx-auto">
         <Link to="/" className="text-sm text-zinc-400 hover:text-white">Back to browse</Link>
+        {v?.series_title && <Link to={`/series/${encodeURIComponent(v.series_title)}`} className="ml-4 text-sm text-zinc-400 hover:text-white">All episodes</Link>}
         {state === 'loading' && <p className="mt-6 text-zinc-500">Loading…</p>}
         {state === 'missing' && <p className="mt-6 text-zinc-300">This video isn’t available. It may have been unpublished or removed.</p>}
         {state === 'ok' && v && (

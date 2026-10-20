@@ -52,7 +52,7 @@ export default function Home() {
           ) : (
             <>
               {hero && (
-                <Link to={`/watch/${hero.id}`} className="relative block mx-4 md:mx-10 h-64 md:h-[26rem] rounded overflow-hidden group">
+                <Link to={hero.series_title ? `/series/${encodeURIComponent(hero.series_title)}` : `/watch/${hero.id}`} className="relative block mx-4 md:mx-10 h-64 md:h-[26rem] rounded overflow-hidden group">
                   <img src={thumbOf(hero)} alt="" className="absolute inset-0 w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent" />
                   <div className="absolute bottom-0 p-5 md:p-10 max-w-2xl">
@@ -62,8 +62,8 @@ export default function Home() {
                   </div>
                 </Link>
               )}
-              <VideoRow title="Continue Watching" videos={pick(histIds)} />
-              <VideoRow title="My List" videos={pick(favIds)} />
+              <VideoRow title="Continue Watching" videos={pick(histIds)} direct />
+              <VideoRow title="My List" videos={pick(favIds)} direct />
               <VideoRow title="Recently Added" videos={recent} />
               {cats.map((c) => <VideoRow key={c.id} title={c.name} videos={collapse(videos.filter((v) => v.category_id === c.id))} />)}
               <VideoRow title="More Videos" videos={collapse(videos.filter((v) => !v.category_id))} />

@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import Watch from './pages/Watch'
 import Admin from './pages/Admin'
 import Account from './pages/Account'
+import Series from './pages/Series'
 
 const Splash = ({ text }: { text: string }) => <div className="min-h-screen grid place-items-center text-zinc-400">{text}</div>
 
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/" element={<Private><Home /></Private>} />
       <Route path="/watch/:id" element={<Private><Watch /></Private>} />
+      <Route path="/series/:name" element={<Private><Series /></Private>} />
       <Route path="/account" element={<Private><Account /></Private>} />
       <Route path="/admin" element={<Private admin><Admin /></Private>} />
       <Route path="*" element={<Navigate to="/" replace />} />
