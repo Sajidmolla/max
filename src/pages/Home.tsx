@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
-import { Header, VideoRow, thumbOf } from '../components'
+import { Header, Skeleton, VideoRow, thumbOf } from '../components'
 import type { Category, Video } from '../lib/types'
 
 export default function Home() {
@@ -42,7 +42,7 @@ export default function Home() {
   return (
     <div className="pb-16">
       <Header />
-      {loading ? <p className="p-10 text-zinc-500">Loading catalog…</p> : err ? <p className="p-10 text-amber-300">{err}</p> : (
+      {loading ? <Skeleton /> : err ? <p className="p-10 text-amber-300">{err}</p> : (
         <>
           <div className="px-4 md:px-10 mb-4"><input className="input md:max-w-sm" placeholder="Search titles" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search" /></div>
           {term ? (
@@ -52,15 +52,21 @@ export default function Home() {
           ) : (
             <>
               {hero && (
-                <Link to={hero.series_title ? `/series/${encodeURIComponent(hero.series_title)}` : `/watch/${hero.id}`} className="relative block mx-4 md:mx-10 h-64 md:h-[26rem] rounded overflow-hidden group">
-                  <img src={thumbOf(hero)} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent" />
-                  <div className="absolute bottom-0 p-5 md:p-10 max-w-2xl">
-                    <h1 className="font-display text-5xl md:text-7xl tracking-wide">{hero.title}</h1>
-                    <p className="hidden md:block mt-2 text-zinc-300 line-clamp-2">{hero.description}</p>
-                    <span className="btn btn-primary mt-4">Play</span>
+                <div className="relative mx-4 h-72 overflow-hidden rounded md:mx-10 md:h-[28rem]">
+                  <img src={thumbOf(hero)} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/50 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-ink to-transparent" />
+                  <div className="absolute bottom-0 max-w-2xl p-5 md:p-12">
+                    {hero.series_title && <p className="mb-1 text-xs tracking-widest text-zinc-300">SERIES</p>}
+                    <h1 className="font-display text-5xl leading-none tracking-wide md:text-7xl">{hero.series_title || hero.title}</h1>
+                    {hero.release_year && <p className="mt-2 text-sm text-zinc-300">{hero.release_year}</p>}
+                    <p className="mt-3 hidden line-clamp-3 text-zinc-200 md:block">{hero.description}</p>
+                    <div className="mt-5 flex gap-3">
+                      <Link to={`/watch/${hero.id}`} className="btn bg-white px-7 text-black hover:bg-zinc-300">Play</Link>
+                      {hero.series_title && <Link to={`/series/${encodeURIComponent(hero.series_title)}`} className="btn btn-ghost px-6">All episodes</Link>}
+                    </div>
                   </div>
-                </Link>
+                </div>
               )}
               <VideoRow title="Continue Watching" videos={pick(histIds)} direct />
               <VideoRow title="My List" videos={pick(favIds)} direct />

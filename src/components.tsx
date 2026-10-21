@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from './lib/auth'
 import { supabase } from './lib/supabase'
 import { driveThumb, FALLBACK_THUMB } from './lib/drive'
@@ -14,41 +14,74 @@ export function usePlatformName() {
 export function Header() {
   const { profile, signOut } = useAuth()
   const name = usePlatformName()
+  const [solid, setSolid] = useState(false)
+  useEffect(() => {
+    const f = () => setSolid(window.scrollY > 20)
+    f(); window.addEventListener('scroll', f)
+    return () => window.removeEventListener('scroll', f)
+  }, [])
+  const initial = (profile?.display_name || profile?.email || '?').charAt(0).toUpperCase()
   return (
-    <header className="sticky top-0 z-20 flex items-center gap-4 px-4 md:px-10 py-3 bg-gradient-to-b from-black to-ink/80 backdrop-blur">
+    <header className={`sticky top-0 z-30 flex items-center gap-5 px-4 md:px-10 py-3 transition-colors duration-300 ${solid ? 'bg-ink shadow-lg shadow-black/50' : 'bg-gradient-to-b from-black/90 to-transparent'}`}>
       <Link to="/" className="font-display text-4xl tracking-wider text-max leading-none">{name}</Link>
       <div className="flex-1" />
-      {profile?.role === 'admin' && <Link to="/admin" className="text-sm text-zinc-400 hover:text-white">Admin</Link>}
-      <Link to="/account" className="text-sm text-zinc-400 hover:text-white">Account</Link>
-      <button onClick={signOut} className="text-sm text-zinc-400 hover:text-white">Sign out</button>
+      {profile?.role === 'admin' && <Link to="/admin" className="text-sm text-zinc-300 hover:text-white">Admin</Link>}
+      <button onClick={signOut} className="text-sm text-zinc-300 hover:text-white">Sign out</button>
+      <Link to="/account" aria-label="Account" className="grid h-8 w-8 place-items-center rounded bg-max text-sm font-bold">{initial}</Link>
     </header>
   )
 }
 
 export const thumbOf = (v: Video) => v.thumbnail_url || driveThumb(v.drive_file_id)
+const isNew = (v: Video) => Date.now() - +new Date(v.created_at) < 7 * 864e5
 
 export function Card({ v, direct }: { v: Video; direct?: boolean }) {
   const series = !direct && !!v.series_title
+  const title = series ? v.series_title! : v.title
+  const to = series ? `/series/${encodeURIComponent(v.series_title!)}` : `/watch/${v.id}`
+  const meta = series ? 'Series' : [v.release_year, v.duration_minutes && `${v.duration_minutes} min`].filter(Boolean).join(' · ')
   return (
-    <Link to={series ? `/series/${encodeURIComponent(v.series_title!)}` : `/watch/${v.id}`} className="shrink-0 w-44 md:w-64 group">
-      <div className="relative aspect-video rounded overflow-hidden bg-panel ring-1 ring-line group-hover:ring-white transition">
-        <img src={thumbOf(v)} alt="" loading="lazy" className="w-full h-full object-cover"
-          onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_THUMB }} />
-        {series && <span className="absolute top-2 left-2 rounded bg-black/70 px-2 py-0.5 text-xs">Series</span>}
+    <Link to={to} className="group/card relative shrink-0 w-44 md:w-64 transition-transform duration-200 hover:scale-110 hover:z-10 focus-visible:scale-110 focus-visible:z-10">
+      <div className="relative aspect-video overflow-hidden rounded bg-panel ring-1 ring-line group-hover/card:ring-zinc-400 group-hover/card:shadow-2xl group-hover/card:shadow-black">
+        <img src={thumbOf(v)} alt="" loading="lazy" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_THUMB }} />
+        <div className="absolute left-2 top-2 flex gap-1">
+          {series && <span className="rounded bg-black/70 px-2 py-0.5 text-xs">Series</span>}
+          {isNew(v) && <span className="rounded bg-max px-2 py-0.5 text-xs font-bold">New</span>}
+        </div>
+        <div className="absolute inset-x-0 bottom-0 hidden bg-gradient-to-t from-black via-black/80 to-transparent p-3 pt-12 opacity-0 transition-opacity group-hover/card:opacity-100 group-focus-visible/card:opacity-100 md:block">
+          <p className="truncate text-sm font-bold">{title}</p>
+          {meta && <p className="text-xs text-zinc-400">{meta}</p>}
+          {v.description && <p className="mt-1 line-clamp-2 text-xs text-zinc-300">{v.description}</p>}
+        </div>
       </div>
-      <p className="mt-2 text-sm truncate">{series ? v.series_title : v.title}</p>
-      {!series && v.release_year && <p className="text-xs text-zinc-500">{v.release_year}</p>}
+      <p className="mt-2 truncate text-sm md:group-hover/card:opacity-0">{title}</p>
     </Link>
   )
 }
 
 export function VideoRow({ title, videos, direct }: { title: string; videos: Video[]; direct?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null)
   if (!videos.length) return null
+  const scroll = (d: number) => ref.current?.scrollBy({ left: d * ref.current.clientWidth * 0.85, behavior: 'smooth' })
+  const arrow = 'absolute top-6 bottom-12 z-20 hidden w-10 items-center justify-center bg-black/60 text-3xl text-white opacity-0 transition hover:bg-black/80 group-hover/row:opacity-100 focus-visible:opacity-100 md:flex'
   return (
-    <section className="mt-8">
-      <h2 className="px-4 md:px-10 mb-3 text-lg font-bold">{title}</h2>
-      <div className="row-scroll flex gap-3 overflow-x-auto px-4 md:px-10 pb-2">{videos.map((v) => <Card key={v.id} v={v} direct={direct} />)}</div>
+    <section className="group/row mt-6">
+      <h2 className="mb-1 px-4 text-lg font-bold md:px-10">{title}</h2>
+      <div className="relative">
+        <button aria-label="Scroll left" onClick={() => scroll(-1)} className={`${arrow} left-0`}>‹</button>
+        <div ref={ref} className="row-scroll flex gap-3 overflow-x-auto px-4 py-6 md:px-10">{videos.map((v) => <Card key={v.id} v={v} direct={direct} />)}</div>
+        <button aria-label="Scroll right" onClick={() => scroll(1)} className={`${arrow} right-0`}>›</button>
+      </div>
     </section>
+  )
+}
+
+export function Skeleton() {
+  return (
+    <div className="animate-pulse space-y-8 px-4 md:px-10">
+      <div className="h-72 rounded bg-panel md:h-[28rem]" />
+      {[0, 1].map((i) => <div key={i} className="flex gap-3">{[0, 1, 2, 3, 4].map((j) => <div key={j} className="aspect-video w-44 shrink-0 rounded bg-panel md:w-64" />)}</div>)}
+    </div>
   )
 }
 
@@ -56,10 +89,10 @@ export function Player({ id }: { id: string }) {
   const [loaded, setLoaded] = useState(false)
   return (
     <div>
-      <div className="relative aspect-video w-full bg-black rounded overflow-hidden ring-1 ring-line">
-        {!loaded && <div className="absolute inset-0 grid place-items-center text-zinc-500 text-sm">Loading player…</div>}
+      <div className="relative aspect-video w-full overflow-hidden rounded bg-black ring-1 ring-line">
+        {!loaded && <div className="absolute inset-0 grid place-items-center text-sm text-zinc-500">Loading player…</div>}
         <iframe title="Video player" src={`https://drive.google.com/file/d/${id}/preview`} allow="autoplay; fullscreen" allowFullScreen
-          onLoad={() => setLoaded(true)} className="absolute inset-0 w-full h-full border-0" />
+          onLoad={() => setLoaded(true)} className="absolute inset-0 h-full w-full border-0" />
       </div>
       <p className="mt-2 text-xs text-zinc-500">
         Not playing? The Drive file may not be shared with your Google account, may be over Google’s view quota, or may still be processing.
