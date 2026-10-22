@@ -11,7 +11,7 @@ export function usePlatformName() {
   return name
 }
 
-export function Header() {
+export function Header({ search, onSearch }: { search?: string; onSearch?: (v: string) => void }) {
   const { profile, signOut } = useAuth()
   const name = usePlatformName()
   const [solid, setSolid] = useState(false)
@@ -25,6 +25,7 @@ export function Header() {
     <header className={`sticky top-0 z-30 flex items-center gap-5 px-4 md:px-10 py-3 transition-colors duration-300 ${solid ? 'bg-ink shadow-lg shadow-black/50' : 'bg-gradient-to-b from-black/90 to-transparent'}`}>
       <Link to="/" className="font-display text-4xl tracking-wider text-max leading-none">{name}</Link>
       <div className="flex-1" />
+      {onSearch && <input className="input !w-28 !py-1.5 md:!w-60" placeholder="Search titles" value={search ?? ''} onChange={(e) => onSearch(e.target.value)} aria-label="Search" />}
       {profile?.role === 'admin' && <Link to="/admin" className="text-sm text-zinc-300 hover:text-white">Admin</Link>}
       <button onClick={signOut} className="text-sm text-zinc-300 hover:text-white">Sign out</button>
       <Link to="/account" aria-label="Account" className="grid h-8 w-8 place-items-center rounded bg-max text-sm font-bold">{initial}</Link>

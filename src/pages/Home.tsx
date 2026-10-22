@@ -41,10 +41,9 @@ export default function Home() {
 
   return (
     <div className="pb-16">
-      <Header />
+      <Header search={q} onSearch={setQ} />
       {loading ? <Skeleton /> : err ? <p className="p-10 text-amber-300">{err}</p> : (
         <>
-          <div className="px-4 md:px-10 mb-4"><input className="input md:max-w-sm" placeholder="Search titles" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search" /></div>
           {term ? (
             results.length ? <VideoRow title={`Results for “${q}”`} videos={results} /> : <p className="px-10 text-zinc-500">No videos match “{q}”.</p>
           ) : !videos.length ? (
