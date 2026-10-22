@@ -90,7 +90,7 @@ export function Player({ id }: { id: string }) {
   const [loaded, setLoaded] = useState(false)
   return (
     <div>
-      <div className="relative -mx-4 aspect-video overflow-hidden bg-black ring-1 ring-line md:mx-0 md:rounded">
+      <div className="relative -mx-4 aspect-video min-h-[15rem] overflow-hidden bg-black ring-1 ring-line md:mx-0 md:min-h-0 md:rounded">
         {!loaded && <div className="absolute inset-0 grid place-items-center text-sm text-zinc-500">Loading player…</div>}
         <iframe title="Video player" src={`https://drive.google.com/file/d/${id}/preview`} allow="autoplay; fullscreen" allowFullScreen
           onLoad={() => setLoaded(true)} className="absolute inset-0 h-full w-full border-0" />
