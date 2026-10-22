@@ -22,12 +22,12 @@ export function Header({ search, onSearch }: { search?: string; onSearch?: (v: s
   }, [])
   const initial = (profile?.display_name || profile?.email || '?').charAt(0).toUpperCase()
   return (
-    <header className={`sticky top-0 z-30 flex items-center gap-5 px-4 md:px-10 py-3 transition-colors duration-300 ${solid ? 'bg-ink shadow-lg shadow-black/50' : 'bg-gradient-to-b from-black/90 to-transparent'}`}>
-      <Link to="/" className="font-display text-4xl tracking-wider text-max leading-none">{name}</Link>
+    <header className={`sticky top-0 z-30 flex items-center gap-3 px-4 py-3 md:gap-5 md:px-10 transition-colors duration-300 ${solid ? 'bg-ink shadow-lg shadow-black/50' : 'bg-gradient-to-b from-black/90 to-transparent'}`}>
+      <Link to="/" className="font-display text-3xl leading-none tracking-wider text-max md:text-4xl">{name}</Link>
       <div className="flex-1" />
-      {onSearch && <input className="input !w-28 !py-1.5 md:!w-60" placeholder="Search titles" value={search ?? ''} onChange={(e) => onSearch(e.target.value)} aria-label="Search" />}
+      {onSearch && <input className="input min-w-0 !w-24 !py-1.5 sm:!w-40 md:!w-60" placeholder="Search titles" value={search ?? ''} onChange={(e) => onSearch(e.target.value)} aria-label="Search" />}
       {profile?.role === 'admin' && <Link to="/admin" className="text-sm text-zinc-300 hover:text-white">Admin</Link>}
-      <button onClick={signOut} className="text-sm text-zinc-300 hover:text-white">Sign out</button>
+      <button onClick={signOut} className="hidden text-sm text-zinc-300 hover:text-white sm:block">Sign out</button>
       <Link to="/account" aria-label="Account" className="grid h-8 w-8 place-items-center rounded bg-max text-sm font-bold">{initial}</Link>
     </header>
   )
@@ -90,7 +90,7 @@ export function Player({ id }: { id: string }) {
   const [loaded, setLoaded] = useState(false)
   return (
     <div>
-      <div className="relative aspect-video w-full overflow-hidden rounded bg-black ring-1 ring-line">
+      <div className="relative -mx-4 aspect-video overflow-hidden bg-black ring-1 ring-line md:mx-0 md:rounded">
         {!loaded && <div className="absolute inset-0 grid place-items-center text-sm text-zinc-500">Loading player…</div>}
         <iframe title="Video player" src={`https://drive.google.com/file/d/${id}/preview`} allow="autoplay; fullscreen" allowFullScreen
           onLoad={() => setLoaded(true)} className="absolute inset-0 h-full w-full border-0" />
@@ -99,6 +99,7 @@ export function Player({ id }: { id: string }) {
         Not playing? The Drive file may not be shared with your Google account, may be over Google’s view quota, or may still be processing.
         Ask the admin to check the file’s sharing settings.
       </p>
+      <a href={`https://drive.google.com/file/d/${id}/view`} target="_blank" rel="noreferrer" className="mt-2 inline-block text-sm text-zinc-300 underline">Open in Google Drive</a>
     </div>
   )
 }
